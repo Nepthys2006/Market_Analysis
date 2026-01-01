@@ -261,30 +261,86 @@ conversation_db = ConversationDatabase()
 # Ollama API endpoint
 OLLAMA_BASE_URL = "http://localhost:11434"
 
-# AI Council Members - Various models
+# AI Council Members - Each model with a persona
 AI_COUNCIL = [
-    {"id": "llama3.2", "name": "Technical Analyst", "color": "#FF6B6B", "specialty": "Technical Analysis"},
-    {"id": "llama3.2", "name": "Fundamentalist", "color": "#4ECDC4", "specialty": "Fundamental Analysis"},
-    {"id": "llama3.2", "name": "Risk Manager", "color": "#45B7D1", "specialty": "Risk Management"},
-    {"id": "llama3.2", "name": "Sentiment Expert", "color": "#96CEB4", "specialty": "Market Sentiment"},
-    {"id": "llama3.2", "name": "Strategist", "color": "#FFD700", "specialty": "Strategy Coordination"},
+    {"id": "nemotron-3-nano:30b-cloud", "name": "Nemotron", "color": "#FF6B6B", "specialty": "Technical Analysis"},
+    {"id": "deepseek-v3.2:cloud", "name": "DeepSeek V3.2", "color": "#4ECDC4", "specialty": "Market Sentiment"},
+    {"id": "minimax-m2:cloud", "name": "MiniMax M2", "color": "#45B7D1", "specialty": "Risk Management"},
+    {"id": "gemini-3-pro-preview:latest", "name": "Gemini Pro", "color": "#96CEB4", "specialty": "Macro Economics"},
+    {"id": "kimi-k2:1t-cloud", "name": "Kimi K2", "color": "#FFEAA7", "specialty": "Price Action"},
+    {"id": "glm-4.6:cloud", "name": "GLM 4.6", "color": "#DDA0DD", "specialty": "Quantitative Analysis"},
+    {"id": "qwen3-vl:235b-cloud", "name": "Qwen3 VL", "color": "#98D8C8", "specialty": "Pattern Recognition"},
+    {"id": "deepseek-v3.1:671b-cloud", "name": "DeepSeek V3.1", "color": "#F7DC6F", "specialty": "Trend Following"},
+    {"id": "gpt-oss:120b-cloud", "name": "GPT-OSS 120B", "color": "#BB8FCE", "specialty": "Fundamental Analysis"},
+    {"id": "gpt-oss:20b-cloud", "name": "GPT-OSS 20B", "color": "#85C1E9", "specialty": "Swing Trading"},
+    {"id": "qwen3-coder:480b-cloud", "name": "Qwen3 Coder", "color": "#F1948A", "specialty": "Algorithmic Strategies"},
 ]
 
-SENIOR_EXPERT_PROMPT = """You are a highly respected senior trading expert with over 20 years of experience.
+# System prompt for senior forex expert persona
+SENIOR_EXPERT_PROMPT = """You are a highly respected senior forex trading expert with over 20 years of experience in the global currency markets. You have:
+- Managed multi-million dollar portfolios for major investment banks
+- Developed proprietary trading strategies that have consistently outperformed the market
+- Mentored hundreds of junior traders who have gone on to successful careers
+- Published research papers on market microstructure and algorithmic trading
+
 Your specialty is: {specialty}
 
-You are part of an elite AI Trading Council where the world's best trading minds collaborate.
+You are part of an elite AI Trading Council where the world's best trading minds collaborate. You take pride in your expertise and always aim to provide the most valuable insights.
 
 {conversation_context}
 
 When responding:
-1. Be confident but humble
+1. Be confident but humble - acknowledge when others have valid points
 2. Share specific, actionable insights based on your expertise
 3. Reference technical concepts and real-world trading scenarios
-4. Keep responses focused and professional (2-3 paragraphs max)
+4. Keep responses focused and professional (3-5 paragraphs max)
 5. Your specialty is {specialty}, so emphasize insights from that perspective
+6. If the user references a previous question, use the conversation history above to provide context-aware responses
 
 Respond as a senior expert would - with authority and depth."""
+
+# Ranking prompt for AIs to evaluate other responses
+RANKING_PROMPT = """You are a senior forex trading expert evaluating responses from your colleagues on the AI Trading Council.
+
+The original question was:
+"{question}"
+
+Here are the responses from other council members:
+{responses}
+
+Rate EACH response on a scale of 1-10 based on:
+- Accuracy of forex/trading knowledge (30%)
+- Actionability of advice (25%)
+- Depth of insight (25%)
+- Clarity of explanation (20%)
+
+Respond in this EXACT JSON format only (no other text):
+{{
+  "rankings": [
+    {{"model_name": "NAME", "score": X, "reason": "brief reason"}}
+  ],
+  "best_insight": "The most valuable insight from the discussion"
+}}"""
+
+# Collaboration synthesis prompt
+COLLABORATION_PROMPT = """You are the senior moderator of an elite AI Trading Council. Your job is to synthesize the best ideas from all council members into a cohesive trading strategy recommendation.
+
+The original question was:
+"{question}"
+
+Here are all the expert responses:
+{responses}
+
+Here are the rankings from the council:
+{rankings}
+
+Create a synthesis that:
+1. Identifies the consensus view (if any)
+2. Highlights the most valuable unique insights
+3. Provides a clear, actionable recommendation
+4. Notes any important disagreements or risks
+
+Keep your synthesis to 4-6 paragraphs. Be authoritative and professional."""
 
 
 class ConnectionManager:
@@ -349,26 +405,22 @@ async def get_council_response(model: dict, question: str) -> dict:
     }
 
 
-async def synthesize_responses(question: str, responses: list[dict]) -> str:
-    """Create a synthesis of all council responses"""
+async def synthesize_responses(question: str, responses: list[dict], rankings_text: str = "") -> str:
+    """Create a synthesis of all council responses using COLLABORATION_PROMPT"""
     responses_text = "\n\n".join([
         f"**{r['model_name']}** ({r['specialty']}): {r['response']}"
         for r in responses
     ])
     
-    synthesis_prompt = f"""Based on these expert analyses:
-
-{responses_text}
-
-Provide a unified recommendation in 2-3 paragraphs. Include:
-1) Consensus view from the council
-2) Key actionable insight
-3) Main risk to consider
-
-Original question: {question}"""
+    synthesis_prompt = COLLABORATION_PROMPT.format(
+        question=question,
+        responses=responses_text,
+        rankings=rankings_text if rankings_text else "No rankings available."
+    )
     
-    moderator = AI_COUNCIL[-1]  # Use Strategist as moderator
-    system = "You are the senior moderator synthesizing insights from the AI Trading Council. Be concise and actionable."
+    # Use the last model (Qwen3 Coder) as moderator
+    moderator = AI_COUNCIL[-1]
+    system = "You are the senior moderator synthesizing insights from the AI Trading Council. Be authoritative and professional."
     result = await query_ollama(moderator["id"], synthesis_prompt, system)
     
     return result if result else "Unable to synthesize responses at this time."
@@ -516,8 +568,11 @@ if __name__ == "__main__":
     print("\n" + "=" * 60)
     print("  STOCK EXCHANGE PRO - AI TRADING COUNCIL SERVER")
     print("=" * 60)
+    print(f"\n  AI Council Members: {len(AI_COUNCIL)} models")
+    for m in AI_COUNCIL:
+        print(f"    - {m['name']}: {m['specialty']}")
     print("\n  Starting server at http://localhost:8000")
-    print("  Make sure Ollama is running with llama3.2 model!")
+    print("  Make sure Ollama is running with cloud models!")
     print("\n  Endpoints:")
     print("    - Frontend: http://localhost:8000")
     print("    - WebSocket: ws://localhost:8000/ws")

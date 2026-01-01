@@ -1150,6 +1150,163 @@ body {
     color: var(--red);
 }
 
+/* Quick Topics */
+.quick-topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.topic-btn {
+    padding: 4px 12px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.topic-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+}
+
+.topic-btn.active {
+    background: var(--gold);
+    color: var(--bg-primary);
+    border-color: var(--gold);
+}
+
+/* Voting Summary */
+.voting-summary {
+    width: 320px;
+    padding: 12px;
+    border-right: 1px solid var(--border);
+    flex-shrink: 0;
+    overflow-y: auto;
+}
+
+.voting-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.voting-header h4 {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.voting-date {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.voting-stats {
+    animation: fadeIn 0.3s ease;
+}
+
+.articles-count {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+.vote-bar-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.vote-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.vote-label {
+    font-size: 0.75rem;
+    width: 120px;
+    flex-shrink: 0;
+}
+
+.vote-bar {
+    flex: 1;
+    height: 16px;
+    background: var(--bg-tertiary);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.vote-fill {
+    height: 100%;
+    transition: width 0.5s ease;
+}
+
+.vote-fill.agree {
+    background: var(--green);
+}
+
+.vote-fill.disagree {
+    background: var(--red);
+}
+
+.vote-fill.neutral {
+    background: var(--text-muted);
+}
+
+.vote-count {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    width: 70px;
+    text-align: right;
+}
+
+/* Final Recommendation */
+.final-recommendation {
+    padding: 12px;
+    background: var(--bg-glass);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+}
+
+.final-recommendation h5 {
+    font-size: 0.85rem;
+    color: var(--gold);
+    margin-bottom: 8px;
+}
+
+.recommendation-text {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.recommendation-text.bullish {
+    color: var(--green);
+}
+
+.recommendation-text.bearish {
+    color: var(--red);
+}
+
+.recommendation-text.neutral {
+    color: var(--text-muted);
+}
+
+.confidence-text {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
 .news-list {
     flex: 1;
     padding: 8px 12px;

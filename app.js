@@ -10,7 +10,7 @@
 
 // ============ Configuration ============
 const CONFIG = {
-    FINNHUB_API_KEY: localStorage.getItem('finnhub_key') || '',
+    FINNHUB_API_KEY: localStorage.getItem('finnhub_key') || 'd5b013pr01qh7ajjjsf0d5b013pr01qh7ajjjsfg',
     FINNHUB_REST_URL: 'https://finnhub.io/api/v1',
     AI_COUNCIL_URL: localStorage.getItem('council_url') || 'ws://localhost:8000/ws',
     REFRESH_INTERVAL: parseInt(localStorage.getItem('refresh_interval')) || 5000,
@@ -709,64 +709,123 @@ class AlertsManager {
     }
 }
 
-// ============ News Manager ============
-class NewsManager {
-    constructor(api) {
-        this.api = api;
+// ============ Sentiment Manager ============
+class SentimentManager {
+    constructor() {
+        this.currentTopic = 'Bitcoin';
     }
 
-    async fetchNews(topic = 'stocks') {
-        const container = document.getElementById('news-list');
-        container.innerHTML = '<div class="loading-spinner"></div>';
+    async analyzeTopic(topic) {
+        this.currentTopic = topic;
+
+        // Update UI
+        document.getElementById('voting-topic').textContent = `📊 Analyzing: ${topic}`;
+        document.getElementById('voting-date').textContent = new Date().toLocaleDateString();
+        document.getElementById('voting-stats').style.display = 'none';
+        document.getElementById('news-list').innerHTML = '<div class="loading-spinner"></div>';
+
+        // Update active topic button
+        document.querySelectorAll('.topic-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.topic === topic);
+        });
 
         try {
-            const news = await this.api.getNews('general');
-            if (news && news.length) {
-                this.renderNews(news.slice(0, 20));
-                return;
+            // Fetch from server
+            const response = await fetch(`http://localhost:8000/api/news/${encodeURIComponent(topic)}`);
+            const data = await response.json();
+
+            if (data && data.total && data.total > 0) {
+                this.displayResults(data);
+            } else if (data.error) {
+                this.showError(data.error);
+            } else {
+                this.showError('No articles found for this topic.');
             }
         } catch (e) {
-            console.error('News fetch error:', e);
+            console.error('Sentiment analysis error:', e);
+            this.showError('Unable to connect to server. Make sure it is running.');
         }
-
-        container.innerHTML = '<p class="empty-msg">Unable to fetch news. Check API key.</p>';
     }
 
-    renderNews(articles) {
-        const container = document.getElementById('news-list');
-        let bullish = 0, bearish = 0, neutral = 0;
+    displayResults(data) {
+        // Show voting stats
+        document.getElementById('voting-stats').style.display = 'block';
+        document.getElementById('articles-count').textContent = data.total;
 
-        const html = articles.map(a => {
-            const sentiment = SentimentAnalyzer.analyze(a.headline || a.title || '');
-            if (sentiment === 'bullish') bullish++;
-            else if (sentiment === 'bearish') bearish++;
-            else neutral++;
+        // Calculate percentages
+        const agreePct = data.agree_pct || 0;
+        const disagreePct = data.disagree_pct || 0;
+        const neutralPct = data.neutral_pct || 0;
+
+        // Update progress bars with animation
+        setTimeout(() => {
+            document.getElementById('agree-bar').style.width = `${agreePct}%`;
+            document.getElementById('disagree-bar').style.width = `${disagreePct}%`;
+            document.getElementById('neutral-bar').style.width = `${neutralPct}%`;
+        }, 100);
+
+        // Update counts
+        document.getElementById('agree-count').textContent = `${data.agree} (${agreePct.toFixed(1)}%)`;
+        document.getElementById('disagree-count').textContent = `${data.disagree} (${disagreePct.toFixed(1)}%)`;
+        document.getElementById('neutral-count').textContent = `${data.neutral} (${neutralPct.toFixed(1)}%)`;
+
+        // Update recommendation
+        const recText = document.getElementById('recommendation-text');
+        const confText = document.getElementById('confidence-text');
+
+        recText.className = 'recommendation-text';
+
+        if (data.recommendation === 'BULLISH') {
+            recText.textContent = `✅ BULLISH - Market sentiment suggests INVESTING in ${this.currentTopic}`;
+            recText.classList.add('bullish');
+            confText.textContent = `📈 Confidence: ${data.confidence.toFixed(1)}% more positive than negative articles`;
+        } else if (data.recommendation === 'BEARISH') {
+            recText.textContent = `❌ BEARISH - Market sentiment suggests AVOIDING ${this.currentTopic}`;
+            recText.classList.add('bearish');
+            confText.textContent = `📉 Confidence: ${data.confidence.toFixed(1)}% more negative than positive articles`;
+        } else {
+            recText.textContent = `⚖️ MIXED - Market sentiment is NEUTRAL on ${this.currentTopic}`;
+            recText.classList.add('neutral');
+            confText.textContent = `💭 Consider waiting for clearer signals`;
+        }
+
+        // Display articles
+        this.displayArticles(data.top_articles || []);
+    }
+
+    displayArticles(articles) {
+        const container = document.getElementById('news-list');
+
+        if (!articles || articles.length === 0) {
+            container.innerHTML = '<p class="empty-msg">No articles to display.</p>';
+            return;
+        }
+
+        const html = articles.map((a, i) => {
+            const sentiment = a.sentiment || 'neutral';
+            const vote = a.vote || 'NEUTRAL';
+            const title = a.title || 'No title';
+            const source = a.source || 'Unknown';
 
             return `
-                <div class="news-item" onclick="window.open('${a.url}', '_blank')">
+                <div class="news-item" onclick="window.open('${a.link}', '_blank')">
                     <span class="news-sentiment ${sentiment}">
-                        ${sentiment === 'bullish' ? '🐂' : sentiment === 'bearish' ? '🐻' : '⚖️'}
+                        ${sentiment === 'bullish' ? '✅' : sentiment === 'bearish' ? '❌' : '⚪'}
                     </span>
                     <div>
-                        <div class="news-title">${a.headline || a.title}</div>
-                        <div class="news-source">${a.source} • ${new Date(a.datetime * 1000).toLocaleDateString()}</div>
+                        <div class="news-title">${title.length > 80 ? title.substring(0, 80) + '...' : title}</div>
+                        <div class="news-source">${source} • ${vote}</div>
                     </div>
                 </div>
             `;
         }).join('');
 
-        container.innerHTML = html || '<p class="empty-msg">No news available.</p>';
+        container.innerHTML = html;
+    }
 
-        // Update sentiment summary
-        const total = bullish + bearish + neutral;
-        if (total > 0) {
-            document.getElementById('bullish-pct').textContent = `${Math.round(bullish / total * 100)}%`;
-            document.getElementById('bearish-pct').textContent = `${Math.round(bearish / total * 100)}%`;
-            document.getElementById('neutral-pct').textContent = `${Math.round(neutral / total * 100)}%`;
-
-            const fillPos = (bullish / total) * 100;
-            document.getElementById('sentiment-fill').style.left = `${fillPos - 8}%`;
-        }
+    showError(message) {
+        document.getElementById('voting-stats').style.display = 'none';
+        document.getElementById('news-list').innerHTML = `<div class="empty-state"><span>⚠️</span><p>${message}</p></div>`;
     }
 }
 
@@ -778,7 +837,7 @@ class StockExchangeApp {
         this.watchlist = new WatchlistManager();
         this.alerts = new AlertsManager();
         this.aiCouncil = new AICouncilManager();
-        this.news = new NewsManager(this.api);
+        this.sentiment = new SentimentManager();
 
         this.currentSymbol = CONFIG.DEFAULT_SYMBOL;
         this.currentCategory = 'stocks';
@@ -807,7 +866,6 @@ class StockExchangeApp {
         this.renderMarkets(this.currentCategory);
         await this.loadSymbol(this.currentSymbol);
         this.renderWatchlist();
-        this.news.fetchNews();
 
         // Start polling for market data
         this.startMarketPolling();
@@ -912,9 +970,23 @@ class StockExchangeApp {
             document.getElementById('ai-panel').classList.toggle('minimized');
         });
 
-        // News
-        document.getElementById('refresh-news').addEventListener('click', () => {
-            this.news.fetchNews(document.getElementById('news-topic').value);
+        // Sentiment Analysis
+        document.getElementById('analyze-sentiment')?.addEventListener('click', () => {
+            const topic = document.getElementById('news-topic').value.trim();
+            if (topic) this.sentiment.analyzeTopic(topic);
+        });
+        document.getElementById('news-topic')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const topic = e.target.value.trim();
+                if (topic) this.sentiment.analyzeTopic(topic);
+            }
+        });
+        document.querySelectorAll('.topic-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const topic = btn.dataset.topic;
+                document.getElementById('news-topic').value = topic;
+                this.sentiment.analyzeTopic(topic);
+            });
         });
 
         // Settings

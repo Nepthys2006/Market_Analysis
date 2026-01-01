@@ -261,8 +261,11 @@
                         <div class="chat-messages" id="chat-messages">
                             <div class="welcome-msg">
                                 <p>👋 Welcome to the AI Trading Council!</p>
-                                <p>Ask any question about the current market and receive insights from multiple AI
-                                    experts.</p>
+                                <p>Ask any question and receive insights from <strong>11 AI experts</strong>:</p>
+                                <p style="font-size:0.75rem;color:var(--text-muted);margin-top:8px;">
+                                    Nemotron • DeepSeek V3.2 • MiniMax M2 • Gemini Pro • Kimi K2 • GLM 4.6 • Qwen3 VL •
+                                    DeepSeek V3.1 • GPT-OSS 120B • GPT-OSS 20B • Qwen3 Coder
+                                </p>
                             </div>
                         </div>
 
@@ -281,29 +284,77 @@
         <!-- Bottom Panel: News & Sentiment -->
         <section class="bottom-panel collapsible" id="news-panel">
             <div class="panel-header">
-                <h3>📰 News & Sentiment</h3>
+                <h3>📰 AI Sentiment Analysis</h3>
                 <div class="panel-header-actions">
                     <div class="news-controls">
-                        <input type="text" id="news-topic" placeholder="Topic" value="stocks">
-                        <button class="btn btn-small" id="refresh-news">Refresh</button>
+                        <input type="text" id="news-topic" placeholder="Search topic (BTC, ETH, Gold...)"
+                            value="Bitcoin">
+                        <button class="btn btn-small btn-primary" id="analyze-sentiment">🔍 Analyze</button>
                     </div>
                     <button class="icon-btn small minimize-btn" title="Minimize">−</button>
                 </div>
             </div>
             <div class="panel-content">
+                <!-- Quick Topic Buttons -->
+                <div class="quick-topics">
+                    <button class="topic-btn" data-topic="Bitcoin">BTC</button>
+                    <button class="topic-btn" data-topic="Ethereum">ETH</button>
+                    <button class="topic-btn" data-topic="Solana">SOL</button>
+                    <button class="topic-btn" data-topic="Gold price">Gold</button>
+                    <button class="topic-btn" data-topic="EUR USD">EUR</button>
+                    <button class="topic-btn" data-topic="NVIDIA stock">NVDA</button>
+                    <button class="topic-btn" data-topic="Tesla stock">TSLA</button>
+                    <button class="topic-btn" data-topic="Apple stock">AAPL</button>
+                </div>
+
                 <div class="news-content">
-                    <div class="sentiment-summary" id="sentiment-summary">
-                        <div class="sentiment-meter">
-                            <div class="meter-fill" id="sentiment-fill" style="width:50%"></div>
+                    <!-- Voting Summary -->
+                    <div class="voting-summary" id="voting-summary">
+                        <div class="voting-header">
+                            <h4 id="voting-topic">📊 Select a topic to analyze</h4>
+                            <span class="voting-date" id="voting-date"></span>
                         </div>
-                        <div class="sentiment-stats">
-                            <span class="bullish">🐂 <span id="bullish-pct">0%</span></span>
-                            <span class="neutral">⚖️ <span id="neutral-pct">0%</span></span>
-                            <span class="bearish">🐻 <span id="bearish-pct">0%</span></span>
+                        <div class="voting-stats" id="voting-stats" style="display:none;">
+                            <div class="articles-count">📰 Articles Analyzed: <span id="articles-count">0</span></div>
+
+                            <div class="vote-bar-container">
+                                <div class="vote-row">
+                                    <span class="vote-label">✅ AGREE (Invest)</span>
+                                    <div class="vote-bar">
+                                        <div class="vote-fill agree" id="agree-bar" style="width:0%"></div>
+                                    </div>
+                                    <span class="vote-count" id="agree-count">0 (0%)</span>
+                                </div>
+                                <div class="vote-row">
+                                    <span class="vote-label">❌ DISAGREE (Avoid)</span>
+                                    <div class="vote-bar">
+                                        <div class="vote-fill disagree" id="disagree-bar" style="width:0%"></div>
+                                    </div>
+                                    <span class="vote-count" id="disagree-count">0 (0%)</span>
+                                </div>
+                                <div class="vote-row">
+                                    <span class="vote-label">⚪ NEUTRAL (Unclear)</span>
+                                    <div class="vote-bar">
+                                        <div class="vote-fill neutral" id="neutral-bar" style="width:0%"></div>
+                                    </div>
+                                    <span class="vote-count" id="neutral-count">0 (0%)</span>
+                                </div>
+                            </div>
+
+                            <div class="final-recommendation" id="final-recommendation">
+                                <h5>🎯 FINAL RECOMMENDATION</h5>
+                                <div class="recommendation-text" id="recommendation-text">Waiting for analysis...</div>
+                                <div class="confidence-text" id="confidence-text"></div>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- News Articles List -->
                     <div class="news-list" id="news-list">
-                        <div class="loading-spinner"></div>
+                        <div class="empty-state">
+                            <span>📰</span>
+                            <p>Enter a topic and click Analyze to see sentiment</p>
+                        </div>
                     </div>
                 </div>
             </div>
