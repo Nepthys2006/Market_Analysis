@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Exchange Pro | AI-Powered Trading Analysis</title>
+    <meta name="description"
+        content="Professional stock market analysis platform with live data, AI council insights, and prediction tools">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- API Key Setup Modal -->
+    <div class="modal-overlay" id="api-modal" style="display: none;">
+        <div class="modal api-modal">
+            <div class="modal-header">
+                <h2>🔑 API Configuration</h2>
+            </div>
+            <div class="modal-body">
+                <p>Enter your Finnhub API key to enable live market data.</p>
+                <div class="input-group">
+                    <label>Finnhub API Key</label>
+                    <input type="text" id="finnhub-key-input" placeholder="Your Finnhub API key">
+                </div>
+                <p class="hint">Get a free key at <a href="https://finnhub.io" target="_blank">finnhub.io</a></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="save-api-key">Save & Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div class="app-container">
+        <!-- Top Navigation -->
+        <header class="top-nav">
+            <div class="nav-left">
+                <div class="logo">
+                    <div class="logo-icon">📈</div>
+                    <div class="logo-text">
+                        <h1>StockExchange Pro</h1>
+                        <span class="tagline">AI-Powered Analysis Platform</span>
+                    </div>
+                </div>
+                <nav class="main-nav">
+                    <button class="nav-btn active" data-view="dashboard">Dashboard</button>
+                    <button class="nav-btn" data-view="news">News</button>
+                    <button class="nav-btn" data-view="alerts">Alerts</button>
+                </nav>
+            </div>
+            <div class="nav-right">
+                <div class="search-container">
+                    <input type="text" id="stock-search" placeholder="Search markets... (Ctrl+K)" autocomplete="off">
+                    <div class="search-results" id="search-results"></div>
+                </div>
+                <div class="connection-status" id="connection-status">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Connecting...</span>
+                </div>
+                <div class="ai-connection-status" id="ai-connection-status">
+                    <span class="status-dot"></span>
+                    <span class="status-text">AI: Offline</span>
+                </div>
+                <button class="icon-btn" id="settings-btn" title="Settings">⚙️</button>
+                <button class="icon-btn" id="theme-toggle" title="Toggle Theme">🌙</button>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Left Sidebar: Market Overview -->
+            <aside class="left-sidebar">
+                <!-- Market Indices -->
+                <section class="panel indices-panel collapsible">
+                    <div class="panel-header">
+                        <h3>📊 Markets</h3>
+                        <button class="icon-btn small minimize-btn" title="Minimize">−</button>
+                    </div>
+                    <div class="panel-content">
+                        <div class="market-tabs">
+                            <button class="market-tab active" data-category="crypto">Crypto</button>
+                            <button class="market-tab" data-category="forex">Forex</button>
+                            <button class="market-tab" data-category="stocks">Stocks</button>
+                        </div>
+                        <div class="indices-grid" id="indices-grid">
+                            <!-- Dynamic content loaded by JS -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Watchlist -->
+                <section class="panel watchlist-panel collapsible">
+                    <div class="panel-header">
+                        <h3>⭐ Watchlist</h3>
+                        <div class="panel-header-actions">
+                            <button class="icon-btn small" id="add-watchlist" title="Add">+</button>
+                            <button class="icon-btn small minimize-btn" title="Minimize">−</button>
+                        </div>
+                    </div>
+                    <div class="panel-content">
+                        <div class="watchlist-container" id="watchlist-container">
+                            <div class="empty-state">
+                                <span>📋</span>
+                                <p>No items in watchlist</p>
+                                <button class="btn btn-small" id="add-first-stock">Add Symbol</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Top Movers -->
+                <section class="panel movers-panel collapsible">
+                    <div class="panel-header">
+                        <h3>🚀 Top Movers</h3>
+                        <div class="panel-header-actions">
+                            <div class="tab-buttons">
+                                <button class="tab-btn active" data-tab="gainers">Gainers</button>
+                                <button class="tab-btn" data-tab="losers">Losers</button>
+                            </div>
+                            <button class="icon-btn small minimize-btn" title="Minimize">−</button>
+                        </div>
+                    </div>
+                    <div class="panel-content">
+                        <div class="movers-list" id="movers-list">
+                            <div class="loading-spinner"></div>
+                        </div>
+                    </div>
+                </section>
+            </aside>
+
+            <!-- Center: Main Chart & Analysis -->
+            <section class="center-content">
+                <!-- Stock Header -->
+                <div class="stock-header" id="stock-header">
+                    <div class="stock-info">
+                        <h2 class="stock-symbol" id="current-symbol">AAPL</h2>
+                        <span class="stock-name" id="current-name">Apple Inc.</span>
+                    </div>
+                    <div class="stock-price-info">
+                        <span class="current-price" id="current-price">$0.00</span>
+                        <span class="price-change positive" id="price-change">+$0.00 (+0.00%)</span>
+                    </div>
+                    <div class="stock-actions">
+                        <button class="btn btn-outline" id="watchlist-btn">☆ Watch</button>
+                        <button class="btn btn-primary" id="ai-analyze-btn">🤖 AI Analysis</button>
+                    </div>
+                </div>
+
+                <!-- Chart Controls -->
+                <div class="chart-controls">
+                    <div class="timeframe-selector">
+                        <button class="tf-btn" data-tf="1D">1D</button>
+                        <button class="tf-btn active" data-tf="1W">1W</button>
+                        <button class="tf-btn" data-tf="1M">1M</button>
+                        <button class="tf-btn" data-tf="3M">3M</button>
+                        <button class="tf-btn" data-tf="1Y">1Y</button>
+                        <button class="tf-btn" data-tf="5Y">5Y</button>
+                    </div>
+                    <div class="chart-type-selector">
+                        <button class="ct-btn active" data-type="candlestick" title="Candlestick">🕯️</button>
+                        <button class="ct-btn" data-type="line" title="Line">📈</button>
+                        <button class="ct-btn" data-type="area" title="Area">📊</button>
+                    </div>
+                    <div class="indicator-selector">
+                        <button class="ind-btn" data-indicator="sma" title="Moving Averages">MA</button>
+                        <button class="ind-btn" data-indicator="rsi" title="RSI">RSI</button>
+                        <button class="ind-btn" data-indicator="bb" title="Bollinger Bands">BB</button>
+                    </div>
+                    <div class="refresh-indicator" id="refresh-indicator">
+                        <span class="refresh-dot"></span>
+                        <span>Live</span>
+                    </div>
+                </div>
+
+                <!-- Main Chart -->
+                <div class="chart-container" id="main-chart"></div>
+
+                <!-- Volume Chart -->
+                <div class="volume-chart" id="volume-chart"></div>
+
+                <!-- Stock Stats -->
+                <div class="stock-stats" id="stock-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Open</span>
+                        <span class="stat-value" id="stat-open">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">High</span>
+                        <span class="stat-value" id="stat-high">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Low</span>
+                        <span class="stat-value" id="stat-low">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Volume</span>
+                        <span class="stat-value" id="stat-volume">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Market Cap</span>
+                        <span class="stat-value" id="stat-mktcap">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">P/E Ratio</span>
+                        <span class="stat-value" id="stat-pe">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">52W High</span>
+                        <span class="stat-value" id="stat-52high">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">52W Low</span>
+                        <span class="stat-value" id="stat-52low">--</span>
+                    </div>
+                </div>
+
+                <!-- Investment Signal -->
+                <div class="investment-signal" id="investment-signal">
+                    <div class="signal-header">
+                        <h4>🎯 Investment Signal</h4>
+                        <span class="signal-badge neutral" id="signal-badge">ANALYZING</span>
+                    </div>
+                    <p class="signal-description" id="signal-description">Waiting for AI analysis...</p>
+                </div>
+            </section>
+
+            <!-- Right Sidebar: AI Council -->
+            <aside class="right-sidebar" id="ai-panel">
+                <div class="panel-toggle" id="ai-toggle">
+                    <span class="toggle-icon">🤖</span>
+                    <span class="toggle-text">AI Council</span>
+                    <span class="notification-badge" id="ai-badge" style="display:none;">!</span>
+                </div>
+                <div class="ai-council-panel collapsible">
+                    <div class="panel-header">
+                        <h3>🧠 AI Trading Council</h3>
+                        <button class="icon-btn small minimize-btn" id="minimize-ai">−</button>
+                    </div>
+
+                    <div class="panel-content">
+                        <!-- Council Status -->
+                        <div class="council-status" id="council-status">
+                            <span class="status-indicator offline"></span>
+                            <span>Connecting to AI Council...</span>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <div class="quick-actions">
+                            <button class="qa-btn" data-question="invest">Good time to invest?</button>
+                            <button class="qa-btn" data-question="risk">What's the risk?</button>
+                            <button class="qa-btn" data-question="target">Price prediction?</button>
+                            <button class="qa-btn" data-question="analysis">Full analysis</button>
+                        </div>
+
+                        <!-- Chat Messages -->
+                        <div class="chat-messages" id="chat-messages">
+                            <div class="welcome-msg">
+                                <p>👋 Welcome to the AI Trading Council!</p>
+                                <p>Ask any question about the current market and receive insights from multiple AI
+                                    experts.</p>
+                            </div>
+                        </div>
+
+                        <!-- Chat Input -->
+                        <div class="chat-input-container">
+                            <div class="chat-input">
+                                <input type="text" id="ai-question" placeholder="Ask the council...">
+                                <button class="btn btn-primary" id="ask-council">Ask</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Bottom Panel: News & Sentiment -->
+        <section class="bottom-panel collapsible" id="news-panel">
+            <div class="panel-header">
+                <h3>📰 News & Sentiment</h3>
+                <div class="panel-header-actions">
+                    <div class="news-controls">
+                        <input type="text" id="news-topic" placeholder="Topic" value="stocks">
+                        <button class="btn btn-small" id="refresh-news">Refresh</button>
+                    </div>
+                    <button class="icon-btn small minimize-btn" title="Minimize">−</button>
+                </div>
+            </div>
+            <div class="panel-content">
+                <div class="news-content">
+                    <div class="sentiment-summary" id="sentiment-summary">
+                        <div class="sentiment-meter">
+                            <div class="meter-fill" id="sentiment-fill" style="width:50%"></div>
+                        </div>
+                        <div class="sentiment-stats">
+                            <span class="bullish">🐂 <span id="bullish-pct">0%</span></span>
+                            <span class="neutral">⚖️ <span id="neutral-pct">0%</span></span>
+                            <span class="bearish">🐻 <span id="bearish-pct">0%</span></span>
+                        </div>
+                    </div>
+                    <div class="news-list" id="news-list">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Alerts View (Hidden by default) -->
+        <section class="view-container" id="alerts-view" style="display:none;">
+            <div class="alerts-header">
+                <h2>🔔 Price Alerts</h2>
+                <button class="btn btn-primary" id="add-alert-btn">+ New Alert</button>
+            </div>
+            <div class="alerts-list" id="alerts-list">
+                <div class="empty-state">
+                    <span>🔔</span>
+                    <p>No alerts configured</p>
+                    <p class="hint">Create alerts to get notified when prices reach your targets</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settings-modal" style="display:none;">
+        <div class="modal settings-modal">
+            <div class="modal-header">
+                <h2>⚙️ Settings</h2>
+                <button class="close-btn" id="close-settings">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <h4>API Configuration</h4>
+                    <div class="input-group">
+                        <label>Finnhub API Key</label>
+                        <input type="text" id="settings-finnhub-key">
+                    </div>
+                    <div class="input-group">
+                        <label>AI Council Server URL</label>
+                        <input type="text" id="settings-council-url" value="ws://localhost:8000/ws">
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <h4>Data Refresh</h4>
+                    <div class="input-group">
+                        <label>Refresh Interval (seconds)</label>
+                        <select id="settings-refresh-interval">
+                            <option value="2">2 seconds (fast)</option>
+                            <option value="5" selected>5 seconds (recommended)</option>
+                            <option value="10">10 seconds (slow)</option>
+                            <option value="30">30 seconds (minimum)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <h4>Display</h4>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="setting-sound">
+                        <label for="setting-sound">Sound Alerts</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="setting-notifications" checked>
+                        <label for="setting-notifications">Browser Notifications</label>
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <h4>Data</h4>
+                    <button class="btn btn-outline" id="export-data">Export All Data</button>
+                    <button class="btn btn-danger" id="clear-all-data">Clear All Data</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="save-settings">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Alert Modal -->
+    <div class="modal-overlay" id="alert-modal" style="display:none;">
+        <div class="modal alert-modal">
+            <div class="modal-header">
+                <h2>🔔 Create Price Alert</h2>
+                <button class="close-btn" id="close-alert-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label>Symbol</label>
+                    <input type="text" id="alert-symbol" placeholder="AAPL">
+                </div>
+                <div class="input-group">
+                    <label>Condition</label>
+                    <select id="alert-condition">
+                        <option value="above">Price goes above</option>
+                        <option value="below">Price goes below</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Target Price</label>
+                    <input type="number" id="alert-price" placeholder="150.00" step="0.01">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancel-alert">Cancel</button>
+                <button class="btn btn-primary" id="confirm-alert">Create Alert</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
