@@ -2187,3 +2187,277 @@ body {
 .right-sidebar.open {
     animation: slideUp 0.3s ease;
 }
+
+/* ============ CRITICAL MOBILE FIXES ============ */
+/* These override any conflicting styles to ensure mobile works */
+@media (max-width: 768px) {
+
+    /* Force all containers to respect viewport width */
+    .left-sidebar,
+    .right-sidebar,
+    .bottom-panel,
+    .left-sidebar *,
+    .right-sidebar *,
+    .bottom-panel * {
+        max-width: 100vw !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Header - Stack and show only essential items */
+    .top-nav {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .nav-left {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .nav-right {
+        flex: 0 0 100%;
+        justify-content: space-between;
+    }
+
+    #stock-search {
+        flex: 1;
+        min-width: 100px;
+        max-width: none !important;
+        width: auto !important;
+    }
+
+    .search-container {
+        flex: 1;
+    }
+
+    /* Market tabs - Wrap to fit */
+    .market-tabs {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .market-tab {
+        flex: 1 1 30%;
+        min-width: 80px;
+        text-align: center;
+    }
+
+    /* Indices grid - Single column on mobile */
+    .indices-grid {
+        grid-template-columns: 1fr !important;
+        gap: 6px;
+        padding: 8px;
+    }
+
+    .index-card {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 12px;
+    }
+
+    .index-card .index-name {
+        font-size: 0.85rem;
+    }
+
+    .index-card .index-value {
+        font-size: 1rem;
+    }
+
+    /* Watchlist - Full width items */
+    .watchlist-container {
+        padding: 8px;
+    }
+
+    .watchlist-item {
+        padding: 10px;
+    }
+
+    /* AI Council panel fixes */
+    .ai-council-panel {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .council-status {
+        flex-shrink: 0;
+    }
+
+    .quick-actions {
+        flex-wrap: wrap;
+        overflow: hidden;
+    }
+
+    .qa-btn {
+        flex: 1 1 45%;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        min-height: 0;
+    }
+
+    .chat-msg-header {
+        flex-wrap: wrap;
+    }
+
+    .chat-content {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    /* Chat input - Constrain width */
+    .chat-input {
+        width: 100%;
+    }
+
+    .chat-input-container {
+        flex-shrink: 0;
+    }
+
+    #ai-question {
+        width: 100%;
+        min-width: 0;
+        flex: 1;
+    }
+
+    #ask-council {
+        flex-shrink: 0;
+    }
+
+    /* News panel fixes */
+    .news-controls {
+        flex-wrap: wrap;
+        width: 100%;
+        gap: 8px;
+    }
+
+    #news-topic {
+        flex: 1;
+        min-width: 120px;
+        width: auto !important;
+    }
+
+    #analyze-sentiment {
+        flex-shrink: 0;
+    }
+
+    /* News panel header */
+    .bottom-panel .panel-header {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .bottom-panel .panel-header-actions {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    /* Quick topics scrollable */
+    .quick-topics {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        padding: 8px;
+    }
+
+    .quick-topics::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Voting summary - Full width stacked */
+    .voting-summary {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .vote-bar-container {
+        width: 100%;
+    }
+
+    .vote-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+
+    .vote-label {
+        width: auto;
+    }
+
+    .vote-bar {
+        width: 100%;
+    }
+
+    .vote-count {
+        width: auto;
+        text-align: left;
+    }
+
+    /* Final recommendation */
+    .final-recommendation {
+        width: 100%;
+    }
+
+    .recommendation-text {
+        font-size: 0.8rem;
+        word-wrap: break-word;
+    }
+
+    /* Alerts view fix */
+    #alerts-view.open,
+    #alerts-view[style*="display: block"] {
+        position: fixed;
+        top: 60px;
+        left: 0;
+        right: 0;
+        bottom: 60px;
+        overflow-y: auto;
+        padding: 16px;
+        background: var(--bg-primary);
+    }
+
+    .alerts-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    /* Stock actions buttons */
+    .stock-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .stock-actions .btn {
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Chart controls - Horizontal scroll */
+    .chart-controls {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .refresh-indicator {
+        flex-shrink: 0;
+    }
+}
