@@ -9,10 +9,16 @@
  */
 
 // ============ Configuration ============
+// Auto-detect host for WebSocket and API (works with localhost and public URLs like ngrok)
+const HOST = window.location.host;
+const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+const HTTP_PROTOCOL = window.location.protocol;
+
 const CONFIG = {
     FINNHUB_API_KEY: localStorage.getItem('finnhub_key') || 'd5b013pr01qh7ajjjsf0d5b013pr01qh7ajjjsfg',
     FINNHUB_REST_URL: 'https://finnhub.io/api/v1',
-    AI_COUNCIL_URL: localStorage.getItem('council_url') || 'ws://localhost:8000/ws',
+    AI_COUNCIL_URL: localStorage.getItem('council_url') || `${WS_PROTOCOL}//${HOST}/ws`,
+    API_BASE_URL: `${HTTP_PROTOCOL}//${HOST}`,
     REFRESH_INTERVAL: parseInt(localStorage.getItem('refresh_interval')) || 5000,
     DEFAULT_SYMBOL: 'AAPL',
     DEMO_MODE: false
@@ -730,8 +736,8 @@ class SentimentManager {
         });
 
         try {
-            // Fetch from server
-            const response = await fetch(`http://localhost:8000/api/news/${encodeURIComponent(topic)}`);
+            // Fetch from server (uses dynamic host for public access)
+            const response = await fetch(`${CONFIG.API_BASE_URL}/api/news/${encodeURIComponent(topic)}`);
             const data = await response.json();
 
             if (data && data.total && data.total > 0) {
@@ -1033,8 +1039,74 @@ class StockExchangeApp {
             if (e.key === 'Escape') {
                 document.getElementById('settings-modal').style.display = 'none';
                 document.getElementById('alert-modal').style.display = 'none';
+                this.closeMobilePanels();
             }
         });
+
+        // Mobile Navigation
+        document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const panel = btn.dataset.panel;
+                this.handleMobileNav(panel);
+
+                // Update active state
+                document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        // Mobile overlay - close panels when clicked
+        document.getElementById('mobile-overlay')?.addEventListener('click', () => {
+            this.closeMobilePanels();
+        });
+    }
+
+    // Mobile navigation handler
+    handleMobileNav(panel) {
+        const leftSidebar = document.querySelector('.left-sidebar');
+        const rightSidebar = document.getElementById('ai-panel');
+        const bottomPanel = document.getElementById('news-panel');
+        const alertsView = document.getElementById('alerts-view');
+        const overlay = document.getElementById('mobile-overlay');
+
+        // Close all panels first
+        this.closeMobilePanels();
+
+        // Open the selected panel
+        switch (panel) {
+            case 'chart':
+                // Just show the chart (default view)
+                break;
+            case 'markets':
+                leftSidebar?.classList.add('open');
+                overlay?.classList.add('active');
+                break;
+            case 'ai':
+                rightSidebar?.classList.add('open');
+                overlay?.classList.add('active');
+                break;
+            case 'news':
+                bottomPanel?.classList.add('open');
+                overlay?.classList.add('active');
+                break;
+            case 'alerts':
+                if (alertsView) {
+                    alertsView.style.display = 'block';
+                    overlay?.classList.add('active');
+                }
+                break;
+        }
+    }
+
+    closeMobilePanels() {
+        document.querySelector('.left-sidebar')?.classList.remove('open');
+        document.getElementById('ai-panel')?.classList.remove('open');
+        document.getElementById('news-panel')?.classList.remove('open');
+        document.getElementById('mobile-overlay')?.classList.remove('active');
+
+        // Reset to chart view
+        document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('.mobile-nav-btn[data-panel="chart"]')?.classList.add('active');
     }
 
     renderMarkets(category) {

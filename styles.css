@@ -1647,6 +1647,66 @@ body {
     }
 }
 
+/* ============ Mobile Navigation Bar ============ */
+.mobile-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    z-index: 200;
+    padding: 6px 0;
+    padding-bottom: max(6px, env(safe-area-inset-bottom));
+}
+
+.mobile-nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 6px 4px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.mobile-nav-btn.active {
+    color: var(--gold);
+}
+
+.mobile-nav-icon {
+    font-size: 1.3rem;
+    margin-bottom: 2px;
+}
+
+.mobile-nav-label {
+    font-size: 0.65rem;
+    font-weight: 500;
+}
+
+/* Mobile Overlay */
+.mobile-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 89;
+    backdrop-filter: blur(2px);
+}
+
+.mobile-overlay.active {
+    display: block;
+}
+
+/* ============ Tablet Responsive (992px) ============ */
 @media (max-width: 992px) {
     .main-content {
         grid-template-columns: 1fr;
@@ -1656,13 +1716,14 @@ body {
     .left-sidebar {
         position: fixed;
         left: -300px;
-        top: 70px;
-        bottom: 0;
+        top: 60px;
+        bottom: 60px;
         width: 280px;
         background: var(--bg-secondary);
-        z-index: 90;
+        z-index: 95;
         transition: left 0.3s ease;
         border-right: 1px solid var(--border);
+        overflow-y: auto;
     }
 
     .left-sidebar.open {
@@ -1671,13 +1732,15 @@ body {
 
     .right-sidebar {
         position: fixed;
-        right: -360px;
-        top: 70px;
-        bottom: 0;
-        width: 350px;
-        z-index: 90;
+        right: -100%;
+        top: 60px;
+        bottom: 60px;
+        width: 100%;
+        max-width: 400px;
+        z-index: 95;
         transition: right 0.3s ease;
         border-left: 1px solid var(--border);
+        background: var(--bg-secondary);
     }
 
     .right-sidebar.open {
@@ -1685,11 +1748,30 @@ body {
     }
 
     .bottom-panel {
-        max-height: 150px;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: -100%;
+        top: auto;
+        max-height: 80vh;
+        margin: 0;
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        z-index: 95;
+        transition: bottom 0.3s ease;
     }
 
-    .sentiment-summary {
-        width: 140px;
+    .bottom-panel.open {
+        bottom: 60px;
+    }
+
+    .voting-summary {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .news-content {
+        flex-direction: column;
     }
 
     .stock-stats {
@@ -1697,9 +1779,24 @@ body {
     }
 }
 
+/* ============ Mobile Responsive (768px) ============ */
 @media (max-width: 768px) {
+    .mobile-nav {
+        display: flex;
+    }
+
+    .app-container {
+        padding-bottom: 60px;
+    }
+
+    body {
+        overflow: auto;
+    }
+
     .top-nav {
         padding: 8px 12px;
+        position: sticky;
+        top: 0;
     }
 
     .logo-text h1 {
@@ -1710,21 +1807,33 @@ body {
         display: none;
     }
 
+    .logo-icon {
+        font-size: 1.5rem;
+    }
+
     #stock-search {
-        width: 180px;
+        width: 100%;
+        max-width: 200px;
     }
 
     .main-nav {
         display: none;
     }
 
-    .connection-status .status-text,
-    .ai-connection-status .status-text {
+    .connection-status,
+    .ai-connection-status {
         display: none;
+    }
+
+    /* Main content takes full width */
+    .center-content {
+        border-radius: 0;
+        margin: 0;
     }
 
     .stock-header {
         padding: 12px 16px;
+        flex-wrap: wrap;
     }
 
     .stock-symbol {
@@ -1735,16 +1844,45 @@ body {
         font-size: 1.4rem;
     }
 
+    .stock-actions {
+        width: 100%;
+        margin-top: 8px;
+    }
+
+    .stock-actions .btn {
+        flex: 1;
+        padding: 8px 12px;
+        font-size: 0.8rem;
+    }
+
+    /* Chart Controls - Scrollable */
     .chart-controls {
         padding: 8px 12px;
         overflow-x: auto;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        gap: 12px;
+    }
+
+    .timeframe-selector,
+    .chart-type-selector,
+    .indicator-selector {
+        flex-shrink: 0;
     }
 
     .tf-btn,
     .ct-btn,
     .ind-btn {
-        padding: 4px 8px;
+        padding: 6px 10px;
         font-size: 0.75rem;
+    }
+
+    .chart-container {
+        min-height: 280px;
+    }
+
+    .volume-chart {
+        height: 60px;
     }
 
     .stock-stats {
@@ -1753,80 +1891,299 @@ body {
         padding: 12px;
     }
 
+    .stat-label {
+        font-size: 0.7rem;
+    }
+
+    .stat-value {
+        font-size: 0.85rem;
+    }
+
     .investment-signal {
         padding: 12px 16px;
     }
 
-    .quick-actions {
-        padding: 8px;
+    /* Left Sidebar - Full screen panel */
+    .left-sidebar {
+        width: 100%;
+        max-width: 100%;
+        left: -100%;
+        top: 60px;
+        bottom: 60px;
     }
 
-    .qa-btn {
-        flex: 1 1 100%;
-        padding: 6px 8px;
-        font-size: 0.7rem;
+    .left-sidebar.open {
+        left: 0;
     }
 
-    .chat-messages {
-        min-height: 150px;
+    /* Right Sidebar (AI Council) - Full screen panel */
+    .right-sidebar {
+        width: 100%;
+        max-width: 100%;
+        top: 60px;
+        bottom: 60px;
     }
 
-    .bottom-panel {
-        margin: 0 8px 8px;
-    }
-
-    .sentiment-summary {
+    .right-sidebar .panel-toggle {
         display: none;
     }
 
-    .news-content {
+    .ai-council-panel {
+        height: 100%;
+    }
+
+    .quick-actions {
+        padding: 10px;
+    }
+
+    .qa-btn {
+        flex: 1 1 45%;
+        padding: 10px 8px;
+        font-size: 0.75rem;
+    }
+
+    .chat-messages {
+        flex: 1;
+        min-height: 200px;
+        max-height: calc(100vh - 300px);
+    }
+
+    .chat-input-container {
+        padding: 12px;
+    }
+
+    #ai-question {
+        font-size: 16px;
+        /* Prevents zoom on iOS */
+    }
+
+    /* Bottom Panel (News) - Full screen panel */
+    .bottom-panel {
+        max-height: 85vh;
+        padding-bottom: 60px;
+    }
+
+    .bottom-panel .panel-content {
+        max-height: calc(85vh - 60px);
+        overflow-y: auto;
+    }
+
+    /* Quick Topics - Scrollable */
+    .quick-topics {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: 10px 12px;
+        gap: 8px;
+    }
+
+    .topic-btn {
+        flex-shrink: 0;
+        padding: 6px 14px;
+    }
+
+    /* Voting Summary - Stacked layout */
+    .voting-summary {
+        width: 100%;
+        max-width: 100%;
+        border-right: none;
+        padding: 12px;
+    }
+
+    .vote-row {
+        flex-wrap: wrap;
+    }
+
+    .vote-label {
+        width: 100%;
+        margin-bottom: 4px;
+        font-size: 0.8rem;
+    }
+
+    .vote-bar {
+        flex: 1;
+        height: 20px;
+    }
+
+    .vote-count {
+        width: auto;
+        min-width: 80px;
+    }
+
+    .final-recommendation {
+        margin-top: 12px;
+    }
+
+    .recommendation-text {
+        font-size: 0.85rem;
+    }
+
+    /* News List */
+    .news-list {
+        padding: 8px;
+    }
+
+    .news-item {
+        padding: 10px 8px;
+    }
+
+    .news-title {
+        font-size: 0.8rem;
+    }
+
+    /* Alerts View */
+    #alerts-view {
+        position: fixed;
+        top: 60px;
+        left: 0;
+        right: 0;
+        bottom: 60px;
+        background: var(--bg-primary);
+        z-index: 95;
+        padding: 16px;
+        overflow-y: auto;
+    }
+
+    .alerts-header {
         flex-direction: column;
+        gap: 12px;
+    }
+
+    .alerts-header h2 {
+        font-size: 1.2rem;
+    }
+
+    /* Modals */
+    .modal {
+        width: 95%;
+        max-width: 400px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .modal-body {
+        padding: 16px;
+    }
+
+    .input-group input,
+    .input-group select {
+        font-size: 16px;
+        /* Prevents zoom on iOS */
     }
 }
 
+/* ============ Small Mobile (480px) ============ */
 @media (max-width: 480px) {
     .top-nav {
         padding: 6px 10px;
     }
 
     .nav-right {
-        gap: 8px;
+        gap: 6px;
+    }
+
+    .logo-text h1 {
+        font-size: 0.9rem;
+    }
+
+    .logo-icon {
+        font-size: 1.3rem;
     }
 
     #stock-search {
-        width: 140px;
-        padding: 8px 12px;
+        max-width: 150px;
+        padding: 8px 10px;
         font-size: 0.85rem;
     }
 
     .icon-btn {
-        width: 36px;
-        height: 36px;
+        width: 34px;
+        height: 34px;
+        font-size: 1rem;
     }
 
     .stock-header {
-        flex-direction: column;
-        align-items: flex-start;
+        padding: 10px 12px;
     }
 
-    .stock-price-info {
-        align-items: flex-start;
+    .stock-info {
+        gap: 8px;
     }
 
-    .stock-actions {
-        width: 100%;
+    .stock-symbol {
+        font-size: 1.1rem;
     }
 
-    .stock-actions .btn {
-        flex: 1;
+    .stock-name {
+        font-size: 0.75rem;
+    }
+
+    .current-price {
+        font-size: 1.2rem;
+    }
+
+    .price-change {
+        font-size: 0.8rem;
     }
 
     .chart-container {
-        min-height: 250px;
+        min-height: 220px;
     }
 
-    .modal {
-        width: 95%;
-        margin: 10px;
+    .stock-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+        padding: 10px;
     }
+
+    /* Mobile Nav - Smaller icons */
+    .mobile-nav-icon {
+        font-size: 1.2rem;
+    }
+
+    .mobile-nav-label {
+        font-size: 0.6rem;
+    }
+
+    /* Voting & News */
+    .voting-header h4 {
+        font-size: 0.85rem;
+    }
+
+    .articles-count {
+        font-size: 0.8rem;
+    }
+
+    .qa-btn {
+        flex: 1 1 100%;
+    }
+}
+
+/* ============ Utility Classes ============ */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.panel.open,
+.bottom-panel.open,
+.left-sidebar.open,
+.right-sidebar.open {
+    animation: slideUp 0.3s ease;
 }
